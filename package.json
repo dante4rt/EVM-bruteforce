@@ -1,0 +1,21 @@
+{
+  "name": "evm-bruteforce",
+  "version": "1.0.0",
+  "description": "Reserved. To be updated ASAP.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "chalk": "^5.3.0",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.9.1",
+    "random-words": "^2.0.0",
+    "readline-sync": "^1.4.10"
+  },
+  "type": "module"
+}
