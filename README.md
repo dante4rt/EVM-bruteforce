@@ -1,2 +1,2 @@
 # evm-bruteforce
-EVM (0x) Wallet Bruteforce.
+Reserved. To be updated ASAP.
