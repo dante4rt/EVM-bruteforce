@@ -28,7 +28,7 @@ const getWalletInfo = async (address) => {
         const balanceWei = response.data.result;
 
         if (balanceWei !== undefined) {
-          const balanceEther = ethers.utils.formatEther(balanceWei);
+          const balanceEther = ethers.formatEther(balanceWei);
           return { balance: balanceEther, address };
         } else {
           throw new Error('Failed to retrieve valid wallet balance from Etherscan API.');
