@@ -1,6 +1,7 @@
 import { generate } from "random-words";
 import { ethers } from "ethers";
-import axios from "axios"; 
+import axios from "axios";
+import fs from "fs";
 import 'dotenv/config';
 
 const isValidMnemonic = (phrase) => {
@@ -15,27 +16,37 @@ const generateValidRandomWords = (wordCount) => {
     return randomWords;
 };
 
-const getWalletBalance = async (address) => {
-    const apiKey = process.env.ETHERSCAN_KEY; 
+const getWalletInfo = async (address) => {
+    const apiKey = process.env.ETHERSCAN_KEY;
     const apiUrl = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&apikey=${apiKey}`;
+    const maxRetries = 3;
 
-    try {
-        const response = await axios.get(apiUrl);
-        if (response.data && response.data.result) {
-            const balanceWei = response.data.result;
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await axios.get(apiUrl);
+            if (response.data && response.data.result) {
+                const balanceWei = response.data.result;
 
-            if (balanceWei !== undefined) {
-                const balanceEther = ethers.formatEther(balanceWei);
-                return balanceEther;
+                if (balanceWei !== undefined) {
+                    const balanceEther = ethers.formatEther(balanceWei);
+                    return { balance: balanceEther, address };
+                } else {
+                    throw new Error("Failed to retrieve valid wallet balance from Etherscan API.");
+                }
             } else {
-                throw new Error("Failed to retrieve valid wallet balance from Etherscan API.");
+                throw new Error("Failed to retrieve wallet balance from Etherscan API.");
             }
-        } else {
-            throw new Error("Failed to retrieve wallet balance from Etherscan API.");
+        } catch (error) {
+            console.error(`Error retrieving wallet info (retry ${i + 1}): ${error.message}`);
+            await delay(1000);
         }
-    } catch (error) {
-        throw new Error(`Error retrieving wallet balance: ${error.message}`);
     }
+
+    throw new Error(`Max retries reached. Unable to retrieve wallet info for address ${address}`);
+};
+
+const writeToFile = (data) => {
+    fs.appendFileSync('results.txt', data + '\n', 'utf8');
 };
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -44,7 +55,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     try {
         let randomWords;
         let checkWallet;
-        let balance = "0.0";
+        let walletInfo = { balance: "0.0", address: "" };
 
         do {
             try {
@@ -52,19 +63,21 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
                 randomWords = generateValidRandomWords(wordCount);
                 checkWallet = ethers.Wallet.fromPhrase(randomWords);
 
-                const walletAddress = checkWallet.address;
-                balance = await getWalletBalance(walletAddress);
-                console.log("Wallet Balance:", balance, "ETH");
+                walletInfo = await getWalletInfo(checkWallet.address);
+                console.log("Wallet Address:", walletInfo.address);
+                console.log("Wallet Balance:", walletInfo.balance, "ETH");
+
+                writeToFile(`${walletInfo.address} || ${walletInfo.balance} ETH || ${randomWords}`);
 
                 await delay(1000);
             } catch (error) {
                 if (error.code === 'INVALID_ARGUMENT' && error.argument === 'mnemonic') {
                     console.log(`Error: ${error.shortMessage}. Regenerating mnemonic...`);
                 } else {
-                    throw error; 
+                    throw error;
                 }
             }
-        } while (balance === "0.0");
+        } while (walletInfo.balance === "0.0");
 
         console.log("Valid mnemonic found:", randomWords);
         console.log("Corresponding private key:", checkWallet.privateKey);
