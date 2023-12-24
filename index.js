@@ -5,6 +5,12 @@ import { ethers } from 'ethers';
 import axios from 'axios';
 import fs from 'fs';
 
+// Check if required environment variables are present and not empty
+if (!process.env.ETHERSCAN_KEY || !process.env.BSCSCAN_KEY || !process.env.POLYGONSCAN_KEY || !process.env.ARBISCAN_KEY || !process.env.OPTIMISM_ETHERSCAN_KEY) {
+  console.error('Please provide valid API keys in the .env file.');
+  process.exit(1); // Exit the script with an error code
+}
+
 // Function to check if the generated mnemonic phrase is valid
 const isValidMnemonic = (phrase) => {
   return (
