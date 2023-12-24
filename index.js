@@ -241,8 +241,31 @@ const getOptimismWalletInfo = async (address) => {
 
 // Function to write data to a file
 const writeToFile = (data) => {
-  fs.appendFileSync('results.txt', data + '\n', 'utf8');
+  const { eth, bnb, matic, arbitrum, avalanche, optimism, mnemonic } = data;
+
+  const ethBalance = eth ? `${eth.balance} ETH` : '0.0 ETH';
+  const bnbBalance = bnb ? `${bnb.balance} BNB` : '0.0 BNB';
+  const maticBalance = matic ? `${matic.balance} MATIC` : '0.0 MATIC';
+  const arbitrumBalance = arbitrum ? `${arbitrum.balance} ETH` : '0.0 ETH';
+  const avalancheBalance = avalanche ? `${avalanche.balance} AVAX` : '0.0 AVAX';
+  const optimismBalance = optimism ? `${optimism.balance} ETH` : '0.0 ETH';
+
+  const balanceInfo = [
+    ethBalance,
+    bnbBalance,
+    maticBalance,
+    arbitrumBalance,
+    avalancheBalance,
+    optimismBalance,
+  ].join(' || ');
+
+  fs.appendFileSync(
+    'results.txt',
+    `${data.address} || ${mnemonic} || ${balanceInfo}\n`,
+    'utf8'
+  );
 };
+
 // Function to introduce a delay using promises
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -321,9 +344,17 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
         }
 
         // Write wallet information to a file
-        writeToFile(
-          `${walletInfo.address} || ${walletInfo.balance} ETH || ${bnbWalletInfo.balance} BNB || ${randomWords}`
-        );
+        writeToFile({
+          address: checkWallet.address,
+          privateKey: checkWallet.privateKey,
+          eth: walletInfo,
+          bnb: bnbWalletInfo,
+          matic: maticWalletInfo,
+          arbitrum: arbitrumWalletInfo,
+          avalanche: avalancheWalletInfo,
+          optimism: optimismWalletInfo,
+          mnemonic: randomWords,
+        });
 
         // Introduce a delay before the next iteration
         await delay(1000);
